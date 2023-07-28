@@ -20,6 +20,16 @@ public class ProductRestController {
         this.productService = productService;
     }
 
+    /**
+     * Save products
+     * @param picture
+     * @param name
+     * @param price
+     * @param account
+     * @param categoryId
+     * @return
+     * @throws IOException
+     */
     @PostMapping("/products")
     public ResponseEntity<ProductResponseRest> save (
             @RequestParam("picture") MultipartFile picture,
@@ -34,21 +44,40 @@ public class ProductRestController {
         product.setAccount(account);
         product.setPrice(price);
         product.setPicture(Util.compressZLib(picture.getBytes()));
-
         ResponseEntity<ProductResponseRest> response = productService.save(product, categoryId);
-
         return response;
     }
 
+    /**
+     * Search by Id
+     * @param id
+     * @return
+     */
     @GetMapping("/products/{id}")
     public ResponseEntity<ProductResponseRest> searchById(@PathVariable Long id) {
         ResponseEntity<ProductResponseRest> response = productService.searchById(id);
         return response;
     }
 
+    /**
+     * Search by name
+     * @param name
+     * @return
+     */
     @GetMapping("/products/filter/{name}")
     public ResponseEntity<ProductResponseRest> searchByName(@PathVariable String name) {
         ResponseEntity<ProductResponseRest> response = productService.searchByName(name);
+        return response;
+    }
+
+    /**
+     * Delete by Id
+     * @param id
+     * @return
+     */
+    @DeleteMapping("/products/{id}")
+    public ResponseEntity<ProductResponseRest> deleteById(@PathVariable Long id) {
+        ResponseEntity<ProductResponseRest> response = productService.deleteById(id);
         return response;
     }
 }
