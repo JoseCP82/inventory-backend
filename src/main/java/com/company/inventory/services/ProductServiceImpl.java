@@ -105,7 +105,7 @@ public class ProductServiceImpl implements IProductService {
             }
         } catch (Exception e) {
             e.getStackTrace();
-            response.setMetadata("respuesta nok", "-1", "Error al buscra los productos");
+            response.setMetadata("respuesta nok", "-1", "Error al buscar los productos");
             return new ResponseEntity<ProductResponseRest>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
         return new ResponseEntity<ProductResponseRest>(response, HttpStatus.OK);
@@ -122,6 +122,36 @@ public class ProductServiceImpl implements IProductService {
         } catch (Exception e) {
             e.getStackTrace();
             response.setMetadata("respuesta nok", "-1", "Error al eliminar el producto");
+            return new ResponseEntity<ProductResponseRest>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        return new ResponseEntity<ProductResponseRest>(response, HttpStatus.OK);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ResponseEntity<ProductResponseRest> search() {
+        ProductResponseRest response = new ProductResponseRest();
+        List<Product> list = new ArrayList<>();
+        List<Product> listAux = new ArrayList<>();
+        try{
+            listAux = (List<Product>) productDao.findAll();
+
+            if(listAux.size() > 0) {
+                listAux.stream().forEach( (p) -> {
+                    byte[] imageDescompressed = Util.decompressZLib(p.getPicture());
+                    p.setPicture(imageDescompressed);
+                    list.add(p);
+                });
+
+                response.getProductResponse().setProducts(list);
+                response.setMetadata("Respuesta ok", "00", "Productos encontrados");
+            } else {
+                response.setMetadata("respuesta nok", "-1", "Productos no encontrados");
+                return new ResponseEntity<ProductResponseRest>(response, HttpStatus.NOT_FOUND);
+            }
+        } catch (Exception e) {
+            e.getStackTrace();
+            response.setMetadata("respuesta nok", "-1", "Error al buscar los productos");
             return new ResponseEntity<ProductResponseRest>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
         return new ResponseEntity<ProductResponseRest>(response, HttpStatus.OK);
