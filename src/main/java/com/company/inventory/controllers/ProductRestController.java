@@ -1,9 +1,13 @@
 package com.company.inventory.controllers;
 
 import com.company.inventory.model.Product;
+import com.company.inventory.response.CategoryResponseRest;
 import com.company.inventory.response.ProductResponseRest;
 import com.company.inventory.services.IProductService;
+import com.company.inventory.utils.CategoryExcelExporter;
+import com.company.inventory.utils.ProductExcelExporter;
 import com.company.inventory.utils.Util;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -36,7 +40,7 @@ public class ProductRestController {
             @RequestParam("name") String name,
             @RequestParam("price") int price,
             @RequestParam("account") int account,
-            @RequestParam("id") Long categoryId
+            @RequestParam("categoryId") Long categoryId
             ) throws IOException
     {
         Product product = new Product();
@@ -81,12 +85,27 @@ public class ProductRestController {
         return response;
     }
 
+    /**
+     * Search products
+     * @return
+     */
     @GetMapping("/products")
     public ResponseEntity<ProductResponseRest> search() {
         ResponseEntity<ProductResponseRest> response = productService.search();
         return response;
     }
 
+    /**
+     * Update products
+     * @param picture
+     * @param name
+     * @param price
+     * @param account
+     * @param categoryId
+     * @param id
+     * @return
+     * @throws IOException
+     */
     @PutMapping("/products/{id}")
     public ResponseEntity<ProductResponseRest> update (
             @RequestParam("picture") MultipartFile picture,
@@ -104,5 +123,24 @@ public class ProductRestController {
         product.setPicture(Util.compressZLib(picture.getBytes()));
         ResponseEntity<ProductResponseRest> response = productService.update(product, categoryId, id);
         return response;
+    }
+
+    /**
+     * Export to excel file
+     * @param response
+     * @throws IOException
+     */
+    @GetMapping("products/export/excel")
+    public void exportToExcel(HttpServletResponse response) throws IOException {
+        response.setContentType("application/octect-stream");
+
+        String headerKey = "Content-Disposition";
+        String headerValue = "attachment; filename=result_category.xlsx";
+        response.setHeader(headerKey, headerValue);
+
+        ResponseEntity<ProductResponseRest> productResponse = productService.search();
+
+        ProductExcelExporter excelExporter = new ProductExcelExporter(productResponse.getBody().getProductResponse().getProducts());
+        excelExporter.export(response);
     }
 }
